@@ -1,0 +1,119 @@
+---
+title: "Data Memo for Project"
+author: "Rok Jun LEE"
+date: "4/11/2018"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+###Libraries
+```{r, message = FALSE}
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+```
+
+###Load Data
+Below, the `glimpse()` function shows what kind of variables are included in my data object that I named **aqi**. Note that some cleaning and altering were done to the aqi object below (to see what was done, please take a look at the code in the RMD file). Below the description of the variables, I have the dimension of the dataset. There are 1590 observations with 19 variables.
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+aqi <- read_csv("data/aqi.csv")
+aqi <- aqi %>%
+  select(-chinesename)  #just a column of NA's
+aqi <- aqi %>% 
+  mutate(pm25 = as.numeric(pm25),
+         pm10 = as.numeric(pm10),
+         o3   = as.numeric(o3),
+         no2  = as.numeric(no2),
+         so2  = as.numeric(so2),
+         co   = as.numeric(co),
+         temp = as.numeric(temperature),
+         dew  = as.numeric(dewpoint),
+         humid= as.numeric(humidity),
+         wind = as.numeric(wind))
+aqi <- aqi %>% 
+  select(-c(temperature, dewpoint, humidity))
+aqi <- aqi %>% 
+  separate(est_time, into = c("year", "date"), sep = 4) %>% 
+  separate(date, into = c("month", "day"), sep = 2) %>% 
+  separate(day, into = c("date", "time"), sep = 2) %>% 
+  separate(time, into = c("hour", "zero"), sep = 2) %>% 
+  select(-zero) %>% 
+  mutate(year  = as.numeric(year),
+         month = as.numeric(month),
+         date  = as.numeric(date),
+         hour  = as.numeric(hour))
+
+aqi %>% glimpse()
+dim(aqi)
+```
+
+
+###Data Source
+*Identify and describe your data source. Provide a link to the main data source if available; otherwise, provide the data in a zip file with this submission. Propose some additional pieces of information (baseline statistics, maps, other data points, other datasets) that may be helpful in your project. Do you anticipate joining your dataset with external datasets? Where do you plan to look for this data?*
+
+**Citation**: <br>
+Moch, J. (n.d.). Air Quality Index Archive based on ground monitors in China. Retrieved April 13, 2018, from http://aqi.cga.harvard.edu/china/about/
+conducted by Harvard John A. Paulson School of Engineering and Applied Sciences
+
+Direct link to the datasets: http://aqi.cga.harvard.edu/china/  <- then click on aqi.csv
+
+The dataset contains the concentration of pollutants that were detected at particular locations in China at different times.
+
+The locations are specified by location_id, name, latitude, and longitude.
+
+The 6 pollutants included in the dataset are $PM2.5$, $PM10$, $O_3$, $NO_2$, $SO_2$, and $CO$. 
+
+$PM2.5$ stands for atmospheric *Particulate Matter* with a diameter of 2.5 micron. 2.5 micron is so small that it can only be seen with an electron microscope. In the data folder, there is a figure that shows how small 2.5 micron is. The PM's come from various sources such as power plants, motor vehicles, airplanes, residential wood burning, forest fires, and so on. Because they are tiny, they can penetrate into the lungs and enter our circulatory system. They are known to cause/trigger various dieseases such as asthma, heart attack, and bronchitis.
+
+All of the concentrations of the pollutants will be converted to AQI scores so that concentrations of different pollutants can be compared to one another. More discussion, including converting concentrations to AQI scores, is included in the *Research Questions* section below.
+
+The dataset also contains other atmopheric information such as the temperature, dewpoint, pressure, humidity, and wind.
+
+The estimated time of the measurement is also available, as the original researchers wanted to comprise a time series using this dataset. In particular, this dataset contains information about air quality on March 18, 2015 from 9AM to 12PM (noon).
+
+
+
+###Research Questions
+*State and define your possible questions of interest. Include whether you are interested in prediction or inference, and whether your problem is classification or regression. State whether your core data supports your type of question (example: if you will be making inferences, is there random assignment in your data?).*
+
+The purpose of AQI is to let people know about the air quality surrouding their areas, and let them protect their health.
+
+The EPA uses a specific formula to calculate AQI. The formula can be found on page 11 from the following pdf: https://www3.epa.gov/airnow/aqi-technical-assistance-document-may2016.pdf.
+
+After converting the concetrations into AQI scores, I am planning to create "Air Quality Category" (AQC) with the following numerical categories: 0 = Very Good, 1 = Good,  2 = Moderate, 3 = Bad, 4 = Very Bad, 5 = dangerous. 
+
+For example, a concentration (or AQI score) of the pollutant $PM2.5$ between $x1$ and $x2$ should be classified as 0 (very good). If the concentration (or AQI score) is higher, then it may be classified to higher numbers 1, 2, 3, 4 or even 5. There is a reason why I am creating **six** categories. The United States Environmental Protection Agency (EPA) calculates AQI and then divides AQI into **six** levels: Good, Moderate, Unhealthy for Sensitive Groups, Unhealthy, Very unhealthy, and Harzardous. The table below shows how EPA divides AQI scores:
+
+```{r, echo=FALSE}
+tibble(
+  AQI   = c("0-50", "51-100", "101-150", "151-200", "201-300", "301-500"),
+  Level = c("Good", "Moderate", "Unhealthy for Sensitive Groups", "Unhealthy", "Very unhealthy", "Harzardous")
+) %>% kable("html") %>% 
+  kable_styling(full_width = FALSE, position = "left")
+```
+
+
+Since there are 6 pollutants, ideally I will produce 6 additional columns that contain AQI scores for each pollutant. Then following the EPA's method, I will pick the **maximum** AQI score from each row, and that maximum AQI score is "the" AQI score assigned for that location at that particular time. Then, using the final AQI, I will be assigning my categories that is modeled after the categories used by the EPA described above (for each location).
+
+In general, air quality is influenced by various factors such as weather, and weather forecast (prediction) is done using a lot of quantitative data of the current state. Therefore, my project is not about making predictions, but more about making *inferences* and learning how air quality is determined using the dataset I have. Also, I am planning to use the average "Air Quality Category", described in the previous paragraph, as my respondent variable. So my project will be a *classification* type. Classification and Regression Tree (CART) will (most likely) be used extensively for this project.
+
+Although EPA uses only the 6 pollutants to get the AQI score, I am planning to investigate if other atmospheric variables (temperature, dewpoint, pressure, humidity, and wind) can help make reasonable inferences on the AQI score. 
+
+
+###Potential Data Issues
+*Identify any potential issues you may face in preparing or analyzing your data, including any merging, cleaning, or processing that may be necessary. Include any challenges you anticipate in the building of your models. Consider anything that may take extra time that is unique to your dataset.*
+
+```{r}
+sum(is.na(aqi)) 
+aqi %>% select(pm25, pm10, o3, no2, so2, co) %>% is.na() %>% sum
+```
+
+As you can see above, the large number of total NA's (2963) is concerning. However, only 323 NA's are from the columns that list concentrations of the pollutants, which are the most important variables in this dataset. Therefore, I will probably not delete any of my observations. I will just ignore the missing AQI for specific pollutant, and pick the maximum of the remaining, non-missing AQI scores to determine the final AQI for the locations with missing concentrations.
+
+I am also collecting some **new data** from this website: http://aqicn.org/city/beijing/.
+
+The website lists the concentration of the same pollutants that are in my aqi object of few places in China like Beijing and Shanghai. I am hoping to use this set as my test/validation set. However, the validation set is going to be from 2018, while aqi lists concentration collected in 2015. So, I am not too sure if I can use this dataset from the website as my test set.
+
+As aforementioned, CART will be used extensively, but I am hoping to use other techniques, such as logistic model and SVM. However those are usually used for binary response variables. Also, I know that we did not cover **time series** in class, but exploring some new basic/intermediate time series methods would be a fun challenge for me.
