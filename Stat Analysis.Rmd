@@ -551,6 +551,8 @@ plot(poly_best_mod, aqi_train_svm, latitude ~ longitude)
 
 ### Neural Network
 Since we have 7 classes, this problem is an instance of “multi-class classification”, and since each observation should be classified into only one category, the problem is an instance of **single-label, multi-class classification**.  
+
+I conducted a simple neural network where I only use **6 predictors** and have **two layers**. The six predictors are the AQI scores of each pollutants. The first layer contains 12 hidden units, and the second layer contains 7 units, because there are 7 categories. You can see that the validation accuracy reaches about 60%.
 ```{r, message = F, results="hide"}
 #set.seed(3)              # for keras set.seed(3) is NOT enough for reproducibility
 use_session_with_seed(3)  # for reproducibility
@@ -567,10 +569,11 @@ x_test <- aqi_test %>% na.omit() %>%
 #Train and Test targets
 one_hot_train_labels <- aqi_train %>% na.omit() %>%   #NA's are discarded
   pull(final_cat) %>%   #indexing starts at zero
-  to_categorical() %>% .[,-1] 
+  to_categorical() %>% .[,-1]   # so deleteing 0th index <- the first column
 one_hot_test_labels <- aqi_test %>% na.omit() %>%     #NA's are discarded
   pull(final_cat) %>%   #indexing starts at zero
-  to_categorical() %>% .[,-1]
+  to_categorical() %>% .[,-1]   # again deleteing 0th index <- the first column
+#If you do not do [,-1], then at the modeling step you need to have units=8, which is weird considering how you have 7 categories. 
 
 #Standardize - using the statistics of the training set
 means_train_dat <- apply(x_train, 2, mean)
@@ -584,9 +587,9 @@ test_data <- scale(x_test,
 
 #Building our network
 model <- keras_model_sequential() %>% 
-    layer_dense(units = 24, activation = "relu", 
+    layer_dense(units = 12, activation = "relu", 
                 input_shape = dim(train_data)[[2]]) %>% 
-    #layer_dense(units = 24, activation = "relu") %>% 
+    #layer_dense(units = 12, activation = "relu") %>% 
     #layer_dense(units = 12, activation = "relu") %>% 
     layer_dense(units = 7, activation = "softmax")   
   
@@ -623,5 +626,18 @@ predictions <- model %>%
 #The coefficients in this vector SHOULD sum to 1:
 sum(predictions[4,])
 sum(predictions[118,])
+```
 
+Interpreting predictions: 118 predictions are made, and among them the 5th category, which is the **very bad** category, always had non-zero probability. Also, the **very bad** category turned out to receive the largest probability (from softmax activation) 98.3% of the time.
+```{r}
+#interpreting predictions a little more.
+#(predictions != 0) %>% colSums()  # number of NON-zero probability of being each probability
+#(predictions != 0) %>% colSums() %>% table_nice()
+c("very good", "good", "moderate", "bad", "very bad", "dangerous", "toxic") %>% 
+  cbind((predictions != 0) %>% colSums()) %>% table_nice() %>%
+  add_header_above(c("Number of NON-zero probabilities" = 2))
+
+
+mean(max.col(predictions, "first") ==5) %>% table_nice() %>%
+  add_header_above(c("Rate of very bad category" = 1))#0.9830508 <- 98.3% of the time classified as 5th column, which is "very bad" category!
 ```
