@@ -227,7 +227,7 @@ Because the final AQI is determined by the maximum AQI score (there is a **formu
 
 As you can see from the result below, $O_3$ is the first pollutant to be added for **best subset** and **forward** seleciton; and it is also the last pollutant to remain in the backward selection.
 
-Note that all six pollutants as well as all the **atmospheric variables** such as pressure, wind, temp, dewpoint, and humidity were included. But as you can see from the results below, the pollutants are always prioritized first; atmospheric variables are added only after ALL the pollutants' AQI scores are included. It is also interesting to see that, among the **non**-pollutant variables, **humidity** is selected first for the best subset and forward seleciton, and discarded last for the backward selection.
+Note that all six pollutants as well as all the **atmospheric variables** such as pressure, wind, temp, dewpoint, and humidity were included. But as you can see from the results below, the pollutants are always prioritized first; atmospheric variables are added only after ALL the pollutants' AQI scores are included. It is also interesting to see that, among the **non**-pollutant variables, **humidity** is selected first for the best subset and forward selection, and discarded last for the backward selection.
 
 * Best subset selection
 ```{r}
@@ -385,7 +385,7 @@ ggbiplot::ggbiplot(pca, scale = 0, alpha = 0.1)
 
 
 **Scree Plot** <br>
-Proportion of variance explained each principal components
+Proportion of variance explained each principal components. The linechart in blue color tells us the **cumulative** proportion of variance explained.
 ```{r}
 #variance for each component
 pca_var <- pca$sdev^2
@@ -552,7 +552,7 @@ plot(poly_best_mod, aqi_train_svm, latitude ~ longitude)
 ### Neural Network
 Since we have 7 classes, this problem is an instance of “multi-class classification”, and since each observation should be classified into only one category, the problem is an instance of **single-label, multi-class classification**.  
 
-I conducted a simple neural network where I only use **6 predictors** and have **two layers**. The six predictors are the AQI scores of each pollutants. The first layer contains 12 hidden units, and the second layer contains 7 units, because there are 7 categories. You can see that the validation accuracy reaches about 60%, considering how there are 7 classes and only 6 predictors are used.
+I conducted a simple neural network where I only use **6 predictors** and have **two layers**. The six predictors are the AQI scores of each pollutants. The first layer contains 12 hidden units, and the second layer contains 7 units, because there are 7 categories. You can see that the validation accuracy reaches about 60%. This is not a bad accuracy if you consider how there are 7 classes to be predicted using only 6 predictors.
 ```{r, message = F, results="hide"}
 #set.seed(3)              # for keras set.seed(3) is NOT enough for reproducibility
 use_session_with_seed(3)  # for reproducibility
