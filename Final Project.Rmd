@@ -90,7 +90,7 @@ The United States Environmental Protection Agency (EPA) keeps track of 6 major a
 
 PM2.5 stands for particulate matter 2.5 micrometers or less in diameter. Particulate Matters are the sum of all solid and liquid particles suspended in air many of which are hazardous. This complex mixture includes both organic and inorganic particles, such as dust, pollen, soot, smoke, and liquid droplets.
 
-The following table summarizes the detrimental health effects that each pollutants can cause on different groups of people. Notice that Ozone, $O_3$, affects the largest number of number of groups.
+The following table summarizes the detrimental health effects that each pollutants can cause on different groups of people. Notice that Ozone, $O_3$, affects the largest number of groups.
 
 ![https://www3.epa.gov/airnow/aqi-technical-assistance-document-may2016.pdf  - page 3](figures/pollutantdescription.png)
 
@@ -168,7 +168,7 @@ For each pollutant's concentration, find the box (in the table below) that the c
 
 ![https://www3.epa.gov/airnow/aqi-technical-assistance-document-may2016.pdf  - page 12](figures/pollutant_breakpoints.png)
 
-The actual AQI score conversion is all about finding the concentration breakpoints of each raw concentration and then using the formula below. Long functions were written in EDA to convert every raw concentration into AQI scores. You can find out exact details of AQI score conversion formula by clicking on the link below the following forumla (on page 11). Functions that performs AQI score conversions were written and used in EDA.
+The actual AQI score conversion is all about finding the concentration breakpoints of each raw concentration and then using the formula below. Long functions were written in EDA to convert every raw concentration into AQI scores. You can find out exact details of AQI score conversion formula by clicking on the link below the following forumla (on page 11). Functions that perform AQI score conversions were written and used in EDA.
 
 ![https://www3.epa.gov/airnow/aqi-technical-assistance-document-may2016.pdf  - page 11](figures/AQI_conversion_formula.png)
 
@@ -354,7 +354,7 @@ aqi_rf_pred <- predict(aqi_rf, newdata = aqi_test, type = "class")
 
 **Variable Importance**
 
-The **left** column/graph is the mean decrease of accuracy in predictions on the out of bag samples when a given variable is exluded from the model. The **right** is a measure of the total decrease in node impurity that results from splits over that variable, averaged over all trees. The results indicate that the AQI score of $O_3$ and then PM2.5 are by far the two most important variables.
+The **left** column/graph is the mean decrease of accuracy in predictions on the out of bag samples when a given variable is excluded from the model. The **right** is a measure of the total decrease in node impurity that results from splits over that variable, averaged over all trees. The results indicate that the AQI score of $O_3$ and then PM2.5 are by far the two most important variables.
 ```{r}
 importance(aqi_rf) %>% as_tibble() %>% 
   mutate(pollutant = c("aqi_pm10", "aqi_pm25", "aqi_no2", "aqi_so2", "aqi_o3", "aqi_co")) %>% 
@@ -451,7 +451,7 @@ china +
 ```
 
 ### Vector Machine
-SVM are intended for the **binary classification** setting in which there are two classes. Therefore, I decided to simplify the 6 categories into 2 categories. The categories "very bad", "dangerous", "toxic" form one category and the rest forms another category. However, as you can see below from the map, the majority of the points overlap one another, so I knew that support vector classifier (linear kernel) would be almost useless in this dataset. Also, the polynomial kernel proved to be not helpful and computationally too expensive (code is contained inside the RMD file; it is just **not** evaluated). Only the **radial** kernel have shown to be somewhat useful as you can see below.
+SVM are intended for the **binary classification** setting in which there are two classes. Therefore, I decided to simplify the 6 categories into 2 categories. The categories "very bad", "dangerous", "toxic" form one category (labeled TRUE) and the rest forms another category. However, as you can see below from the map, the majority of the points overlap one another, so I knew that support vector classifier (linear kernel) would be almost useless in this dataset. Also, the polynomial kernel proved to be not helpful and computationally too expensive (code is contained inside the RMD file; it is just **not** evaluated). Only the **radial** kernel have shown to be somewhat useful as you can see below.
 ```{r}
 #divide into 2 groups for final_cat
   #for train
