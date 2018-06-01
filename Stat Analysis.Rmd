@@ -95,7 +95,7 @@ The following table summarizes the detrimental health effects that each pollutan
 ![https://www3.epa.gov/airnow/aqi-technical-assistance-document-may2016.pdf  - page 3](figures/pollutantdescription.png)
 
 ### About our training set  - withOUT AQI score, ie, raw concentration
-I will perform the same initial exploration of my training set that I performed in my EDA. When AQI score is not computed (and simply raw scaled concentrations are used), we see that PM2.5 seems to be the most problematic pollutant; it seems to have the highest scaled concentration.
+I will perform the same initial exploration of my training set that I performed in my EDA. In my EDA, I performed the following analysis using the **entire set**. Here, I am using the training set, which is 85% of the entire data set. When AQI score is **not** computed (and simply raw concentrations are used), we see that PM2.5 seems to be the most problematic pollutant; it seems to have the highest scaled concentration.
 ```{r, warning = FALSE}
 #training set; pollutants by hour
 aqi_train %>% 
@@ -156,7 +156,7 @@ poll_stat %>%
 
 
 ### About our training set - WITH AQI score
-The AQI score conversion from raw concentration is simple. First of all, we need to know in which air-quality-category our raw concentrations fall into. The table below uses 6 air quality categories: 
+The AQI score conversion from raw concentration is simple. First of all, we need to know in which air-quality-category the raw concentrations fall into. The table below uses 6 air quality categories: 
 
 * Good, Moderate, Unhealthy for Sensitive Groups, Unhealthy, Very Unhealty, Harzardous, Harzardous
 
@@ -168,11 +168,11 @@ For each pollutant's concentration, find the box that the concentration falls in
 
 ![https://www3.epa.gov/airnow/aqi-technical-assistance-document-may2016.pdf  - page 12](figures/pollutant_breakpoints.png)
 
-The actual AQI score conversion is all about finding the concentration breakpoints of each raw concentration and then using the formula below. Long functions were written in EDA to convert every raw concentration into AQI scores.
+The actual AQI score conversion is all about finding the concentration breakpoints of each raw concentration and then using the formula below. Long functions were written in EDA to convert every raw concentration into AQI scores. You can find out exact details of AQI conversion formula by clicking on the link below the following forumla (on page 11). Functions that performs AQI score conversions were written and used in EDA.
 
 ![https://www3.epa.gov/airnow/aqi-technical-assistance-document-may2016.pdf  - page 11](figures/AQI_conversion_formula.png)
 
-The **final AQI score** is the highest AQI score value calculated for each pollutant. For example, in the figure below, I put stars next to the AQI scores that are used as the final AQI scores
+The **final AQI score** is the highest AQI score value calculated for each pollutant. For example, in the figure below, I put stars next to the AQI scores that are used as the final AQI scores. The final AQI score is the score under the "max_aqi" column in the figure below.
 
 ![](figures/identifyMaxAqi.png)
 
@@ -200,7 +200,7 @@ aqi_train %>%
 
 
 ### Map Visualization
-This is a map visualization of the entire dataset (training & validation sets). We see that most of the data is gathered from Eastern China, and also majority of the AQI scores fall into the **very bad** category. All these categories were determined after AQI conversions were completed.
+This is a map visualization of the entire dataset (training & validation sets). We see that most of the data is gathered from Eastern China, and also majority of the AQI scores fall into the **very bad** category. All these categories were determined by using the AQI scores.
 ```{r, warning=FALSE, message=FALSE}
 # --------getting the map
 china <- get_map("china", maptype = "roadmap", zoom = 4) %>% 
@@ -228,7 +228,7 @@ Because the final AQI is determined by the maximum AQI score (there is a **formu
 
 As you can see from the result below, $O_3$ is the first pollutant to be added for **best subset** and **forward** seleciton; and it is also the last pollutant to remain in the backward selection.
 
-Note that all six pollutants as well as all the atmospheric variables such as pressure, wind, temp, dewpoint, and humidity were included. But as you can see from the results below, the pollutants are always prioritized first. It is also interesting to see that **humidity** is selected first for the best subset and forward seleciton, and discarded last for the backward selection among the **non**-pollutant variables.
+Note that all six pollutants as well as all the atmospheric variables such as pressure, wind, temp, dewpoint, and humidity were included. But as you can see from the results below, the pollutants are always prioritized first; atmospheric variables are added only after ALL the pollutants' AQI scores are included. It is also interesting to see that, among the **non**-pollutant variables, **humidity** is selected first for the best subset and forward seleciton, and discarded last for the backward selection.
 
 * Best subset selection
 ```{r}
@@ -325,7 +325,7 @@ text(tree_pruned, pretty = 0, cex = 0.5)
 ```
 <br>
 
-**Confusion Table** with pruned tree, using the validation set
+**Confusion Table** with the pruned tree, using the validation set
 ```{r}
 tree_pred <- predict(tree_pruned, aqi_test, type = "class")
 table(tree_pred, aqi_test$final_cat) %>%
@@ -452,7 +452,7 @@ china +
 ```
 
 ### Vector Machine
-SVM are intended for the **binary classification** setting in which there are two classes. Therefore I decided simplify the 6 categories into 2 categories. The categories "very bad", "dangerous", "toxic" forms one category and the rest forms another category. However, as you can see below from the map, the majority of the points overlap one another, so I knew that support vector classifier (linear kernel) will be almost useless in this dataset. Also, the polynomial kernel proved to be not helpful and computationally too expensive (code is contained inside the rmd file; it is just not evaluated). Only the **radial** kernel have shown to be somewhat useful.
+SVM are intended for the **binary classification** setting in which there are two classes. Therefore I decided simplify the 6 categories into 2 categories. The categories "very bad", "dangerous", "toxic" forms one category and the rest forms another category. However, as you can see below from the map, the majority of the points overlap one another, so I knew that support vector classifier (linear kernel) would be almost useless in this dataset. Also, the polynomial kernel proved to be not helpful and computationally too expensive (code is contained inside the rmd file; it is just **not** evaluated). Only the **radial** kernel have shown to be somewhat useful as you can see below.
 ```{r}
 #divide into 2 groups for final_cat
   #for train
